@@ -1,0 +1,8 @@
+server:
+  port: 8080
+
+log:
+  level: info
+
+mysql:
+  dsn: "root:123456@tcp(127.0.0.1:3306)/go_order_lite?charset=utf8mb4&parseTime=True&loc=Local"
