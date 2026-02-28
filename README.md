@@ -10,7 +10,7 @@
 - **高性能延迟队列**：基于 Redis `ZSet` (Sorted Set) 实现可靠的订单超时自动取消机制，替代传统的数据库轮询，大幅降低 DB 压力。
 - **缓存穿透与雪崩防御**：在用户信息查询场景中引入 Redis 缓存，针对空值缓存 `null` 设置较短过期时间，有效防止缓存穿透攻击。
 - **全局链路追踪与统一异常处理**：实现自定义中间件，自动向 Context 注入 `request_id` 并串联 Zap 日志；封装全局错误拦截器，标准化 API 响应结构 (`code`, `msg`, `data`)。
-- **优雅启停：通过 `os/signal` 监听 `SIGINT`/`SIGTERM` 信号，结合 `context.WithTimeout`，确保 HTTP Server 和后台队列消费者在容器销毁前安全退出，不丢失正在处理的请求。
+- **优雅启停**：通过 `os/signal` 监听 `SIGINT`/`SIGTERM` 信号，结合 `context.WithTimeout`，确保 HTTP Server 和后台队列消费者在容器销毁前安全退出，不丢失正在处理的请求。
 
 ## 技术栈
 
