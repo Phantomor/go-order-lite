@@ -50,7 +50,7 @@
 ### 2. 克隆与配置
 
 ```bash
-git clone [https://github.com/phantomor/go-order-lite.git](https://github.com/phantomor/go-order-lite.git)
+git clone [https://github.com/Phantomor/go-order-lite.git](https://github.com/Phantomor/go-order-lite.git)
 cd go-order-lite
 
 # 安装依赖
