@@ -99,10 +99,11 @@ func ListMyOrders(c *gin.Context) {
 // @Failure 401 {object} response.Response
 // @Router /order/{id}/pay [get]
 func PayOrder(c *gin.Context) {
+	ctx := c.Request.Context()
 	userID := c.GetUint("user_id")
 	orderID, _ := strconv.Atoi(c.Param("id"))
 
-	if err := service.PayOrder(userID, uint(orderID)); err != nil {
+	if err := service.PayOrder(ctx, userID, uint(orderID)); err != nil {
 		c.Error(err)
 		return
 	}

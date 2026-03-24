@@ -24,12 +24,15 @@ import (
 	"syscall"
 	"time"
 
+	"go-order-lite/internal/mq/consumer"
 	"go-order-lite/internal/server"
-	"go-order-lite/internal/service"
 	"go-order-lite/pkg/config"
 	"go-order-lite/pkg/logger"
+	"go-order-lite/pkg/mq"
 	"go-order-lite/pkg/mysql"
 	"go-order-lite/pkg/redis"
+
+	"github.com/apache/rocketmq-client-go/v2/rlog"
 
 	"go.uber.org/zap"
 )
@@ -46,6 +49,7 @@ func main() {
 	}
 	defer logger.Log.Sync()
 
+	rlog.SetLogLevel("warn")
 	// 2.1 启动Mysql
 	if err := mysql.Init(); err != nil {
 		log.Fatalf("mysql init failed: %v", err)
@@ -54,12 +58,27 @@ func main() {
 	if err := redis.InitRedis(); err != nil {
 		log.Fatalf("redis init failed: %v", err)
 	}
+	// 2.3 启动RocketMQ
+	if err := mq.InitMQ(); err != nil {
+		log.Fatalf("rocketmq init failed: %v", err)
+	}
+
 	// 3 创建「根 context」
-	rootCtx, cancel := context.WithCancel(context.Background())
+	_, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// 4 启动后台任务（Redis 延迟队列消费者）
-	go service.StartDelayQueueConsumer(rootCtx)
+	// 4 启动后台任务 RocketMQ 消费者
+	if err := consumer.InitOrderCancelConsumer(); err != nil {
+		log.Fatalf("init order cancel consumer failed: %v", err)
+	}
+
+	// 注册下游解耦消费者
+	if err := consumer.InitPointConsumer(); err != nil {
+		log.Fatalf("init point consumer failed: %v", err)
+	}
+	if err := consumer.InitSMSConsumer(); err != nil {
+		log.Fatalf("init sms consumer failed: %v", err)
+	}
 
 	// 5. 创建 HTTP Server
 	srv := server.NewHTTPServer(config.Cfg.Server.Port)
@@ -79,13 +98,22 @@ func main() {
 	<-quit
 	logger.Log.Info("shutdown signal received")
 
-	// 8 优雅关闭（关键）
+	// 8 优雅关闭
 	ctx, timeoutCancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer timeoutCancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
 		logger.Log.Error("server shutdown failed", zap.Error(err))
 	}
+
+	// 优雅关闭 MQ 生产者
+	if err := mq.CloseMQ(); err != nil {
+		logger.Log.Error("mq shutdown failed", zap.Error(err))
+	}
+	// 优雅关闭 MQ 消费者
+	consumer.CloseOrderCancelConsumer()
+	consumer.ClosePointConsumer()
+	consumer.CloseSMSConsumer()
 
 	logger.Log.Info("server exited gracefully")
 }

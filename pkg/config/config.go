@@ -3,9 +3,10 @@ package config
 import "github.com/spf13/viper"
 
 type Config struct {
-	Server ServerConfig
-	Log    LogConfig
-	Mysql  MysqlConfig
+	Server   ServerConfig
+	Log      LogConfig
+	Mysql    MysqlConfig
+	RocketMQ RocketMQConfig
 }
 
 type ServerConfig struct {
@@ -16,6 +17,11 @@ type LogConfig struct {
 }
 type MysqlConfig struct {
 	DSN string
+}
+
+type RocketMQConfig struct {
+	NameServers []string `mapstructure:"name_servers"`
+	Retry       int      `mapstructure:"retry"`
 }
 
 var Cfg Config

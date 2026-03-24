@@ -10,7 +10,7 @@ import (
 
 func GetUserByUsername(username string) (*model.User, error) {
 	var user model.User
-	err := mysql.DB.Where("username = ?", username).First(&user).Error
+	err := mysql.DB.Where("username = ?", username).Find(&user).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
 	}
@@ -26,7 +26,7 @@ func CreateUser(user *model.User) error {
 
 func GetUserByID(id uint) (*model.User, error) {
 	var user model.User
-	err := mysql.DB.Where("id = ?", id).First(&user).Error
+	err := mysql.DB.Where("id = ?", id).Find(&user).Error
 	if err != nil {
 		return nil, err
 	}
